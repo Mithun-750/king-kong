@@ -1,0 +1,22 @@
+[
+  {
+    "regex": "\\banyone\\b.{0,20}?\\b(?:here|watching|from)?\\s*(?:in\\s*)?(20[2-3][0-9])\\b",
+    "title": "Anyone here in YEAR?"
+  },
+  {
+    "regex": "\\bwho(?:'?s|\\s+is)?\\s+(?:still\\s+)?(?:watching|here)\\s+(?:in\\s*)?(20[2-3][0-9])\\b",
+    "title": "Who's still watching in YEAR?"
+  },
+  {
+    "regex": "\\bstill\\s+(?:watching|here)\\s+(?:in\\s*)?(20[2-3][0-9])\\b",
+    "title": "Still watching in YEAR?"
+  },
+  {
+    "regex": "\\b(20[2-3][0-9])\\b.{0,20}?\\b(?:anyone|who(?:'?s)?|still)\\b",
+    "title": "YEAR anyone?"
+  },
+  {
+    "regex": "\\b(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\\s+(20[2-3][0-9])\\b.{0,20}?\\b(?:anyone|who(?:'?s)?|still)\\b",
+    "title": "MONTH YEAR anyone?"
+  }
+]
