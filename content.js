@@ -1,28 +1,32 @@
-// King Kong Content Script - YouTube Comment Filter
-console.log("🦍 King Kong: Comment filter loaded");
+// King Kong Content Script - YouTube Comment Manager
+console.log("🦍 King Kong: Comment manager loaded");
 
 // Global variables
 let isFilterEnabled = false;
-let regexPatterns = [];
+let filterPatterns = [];
+let highlightPatterns = [];
 let filteredCommentsCount = 0;
+let highlightedCommentsCount = 0;
+let totalCommentsCount = 0;
 let observer = null;
 
 // Initialize the extension
 async function init() {
   await loadSettings();
   await loadPatterns();
-  await loadStoredCount();
+  await loadStoredCounts();
 
-  if (isFilterEnabled) {
-    startObserving();
-    // Only process existing comments if filter is enabled
-    processExistingComments();
-  }
+  startObserving();
+
+  // Process existing comments
+  processExistingComments();
 
   console.log(
     "🦍 King Kong: Initialized with",
-    regexPatterns.length,
-    "patterns, filter",
+    filterPatterns.length,
+    "filter patterns,",
+    highlightPatterns.length,
+    "highlight patterns, filter",
     isFilterEnabled ? "enabled" : "disabled"
   );
 }
@@ -37,23 +41,33 @@ async function loadSettings() {
   }
 }
 
-// Load regex patterns from storage
+// Load patterns from storage
 async function loadPatterns() {
   try {
-    const result = await chrome.storage.sync.get(["regexPatterns"]);
-    regexPatterns = result.regexPatterns || [];
+    const result = await chrome.storage.sync.get([
+      "regexPatterns",
+      "highlightPatterns",
+    ]);
+    filterPatterns = result.regexPatterns || [];
+    highlightPatterns = result.highlightPatterns || [];
   } catch (error) {
     console.error("Error loading patterns:", error);
   }
 }
 
-// Load stored count from storage
-async function loadStoredCount() {
+// Load stored counts from storage
+async function loadStoredCounts() {
   try {
-    const result = await chrome.storage.local.get(["filteredCommentsCount"]);
+    const result = await chrome.storage.local.get([
+      "filteredCommentsCount",
+      "highlightedCommentsCount",
+      "totalCommentsCount",
+    ]);
     filteredCommentsCount = result.filteredCommentsCount || 0;
+    highlightedCommentsCount = result.highlightedCommentsCount || 0;
+    totalCommentsCount = result.totalCommentsCount || 0;
   } catch (error) {
-    console.error("Error loading stored count:", error);
+    console.error("Error loading stored counts:", error);
   }
 }
 
@@ -89,7 +103,7 @@ function startObserving() {
     });
 
     if (hasNewComments) {
-      updateFilteredCount();
+      updateCounts();
     }
   });
 
@@ -113,11 +127,6 @@ function stopObserving() {
 
 // Process existing comments on page
 function processExistingComments() {
-  if (!isFilterEnabled) {
-    console.log("🦍 King Kong: Filter disabled, skipping existing comments");
-    return;
-  }
-
   const commentThreads = document.querySelectorAll(
     "ytd-comment-thread-renderer"
   );
@@ -126,12 +135,13 @@ function processExistingComments() {
   );
 
   commentThreads.forEach(processCommentThread);
-  updateFilteredCount();
+  updateCounts();
 }
 
 // Process a single comment thread
 function processCommentThread(commentThread) {
-  if (!isFilterEnabled || regexPatterns.length === 0) {
+  // Skip if already processed
+  if (commentThread.getAttribute("data-king-kong-processed") === "true") {
     return;
   }
 
@@ -147,32 +157,110 @@ function processCommentThread(commentThread) {
   const commentText =
     commentTextElement.textContent || commentTextElement.innerText || "";
 
-  // Check if comment matches any regex pattern
-  const shouldHide = regexPatterns.some((pattern) => {
+  // Mark as processed
+  commentThread.setAttribute("data-king-kong-processed", "true");
+  totalCommentsCount++;
+
+  // Apply filtering if enabled
+  if (isFilterEnabled && shouldFilterComment(commentText)) {
+    hideComment(commentThread, commentText);
+    return; // Don't highlight filtered comments
+  }
+
+  // Apply highlighting
+  applyHighlighting(commentTextElement, commentText);
+
+  // Ensure comment is visible (in case it was previously filtered)
+  showComment(commentThread);
+}
+
+// Check if comment should be filtered
+function shouldFilterComment(commentText) {
+  if (!isFilterEnabled || filterPatterns.length === 0) {
+    return false;
+  }
+
+  return filterPatterns.some((pattern) => {
     try {
-      // Handle both old string format and new object format for backwards compatibility
       const regex = typeof pattern === "string" ? pattern : pattern.regex;
       const regexObj = new RegExp(regex, "i"); // Case insensitive
       return regexObj.test(commentText);
     } catch (error) {
-      const patternDisplay =
-        typeof pattern === "string"
-          ? pattern
-          : `${pattern.title}: ${pattern.regex}`;
-      console.warn(
-        "🦍 King Kong: Invalid regex pattern:",
-        patternDisplay,
-        error
-      );
+      console.warn("🦍 King Kong: Invalid filter pattern:", pattern, error);
       return false;
     }
   });
+}
 
-  if (shouldHide) {
-    hideComment(commentThread, commentText);
-  } else {
-    showComment(commentThread);
+// Apply highlighting to comment text
+function applyHighlighting(commentTextElement, commentText) {
+  if (highlightPatterns.length === 0) {
+    return;
   }
+
+  let hasHighlights = false;
+  let highlightedHTML = commentText;
+  let matchedColors = new Set(); // Track unique colors used
+
+  // Apply each highlight pattern
+  highlightPatterns.forEach((pattern) => {
+    try {
+      const regexObj = new RegExp(pattern.regex, "gi"); // Global and case insensitive
+      const matches = commentText.match(regexObj);
+
+      if (matches) {
+        hasHighlights = true;
+        matchedColors.add(pattern.color);
+        // Replace matches with highlighted spans
+        highlightedHTML = highlightedHTML.replace(regexObj, (match) => {
+          return `<span style="background-color: ${pattern.color}; color: #000; padding: 2px 4px; border-radius: 3px; font-weight: 600;">${match}</span>`;
+        });
+      }
+    } catch (error) {
+      console.warn("🦍 King Kong: Invalid highlight pattern:", pattern, error);
+    }
+  });
+
+  // Apply highlights if any were found
+  if (hasHighlights) {
+    commentTextElement.innerHTML = highlightedHTML;
+    commentTextElement.setAttribute("data-king-kong-highlighted", "true");
+
+    // Apply background color to the entire comment thread
+    const commentThread = commentTextElement.closest(
+      "ytd-comment-thread-renderer"
+    );
+    if (commentThread && matchedColors.size > 0) {
+      // Use the first matched color for the background
+      const backgroundColor = Array.from(matchedColors)[0];
+      const rgbaColor = hexToRgba(backgroundColor, 0.1); // Low opacity background
+
+      commentThread.style.backgroundColor = rgbaColor;
+      commentThread.style.border = `1px solid ${hexToRgba(
+        backgroundColor,
+        0.3
+      )}`;
+      commentThread.style.borderRadius = "8px";
+      commentThread.style.padding = "8px";
+      commentThread.style.margin = "4px 0";
+      commentThread.setAttribute("data-king-kong-thread-highlighted", "true");
+      commentThread.setAttribute("data-highlight-color", backgroundColor);
+    }
+
+    highlightedCommentsCount++;
+    console.log(
+      "🦍 King Kong: Highlighted comment:",
+      commentText.substring(0, 50) + "..."
+    );
+  }
+}
+
+// Helper function to convert hex to rgba
+function hexToRgba(hex, alpha = 1) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
 // Hide a comment
@@ -182,7 +270,7 @@ function hideComment(commentThread, commentText) {
     commentThread.style.display === "none" &&
     commentThread.getAttribute("data-king-kong-filtered") === "true"
   ) {
-    return; // Already filtered, don't count again
+    return;
   }
 
   commentThread.style.display = "none";
@@ -194,95 +282,159 @@ function hideComment(commentThread, commentText) {
     commentText.substring(0, 50) + "..."
   );
 
-  // Add a subtle indicator for debugging (only visible in dev mode)
+  // Add a subtle indicator for debugging
   if (!commentThread.querySelector(".king-kong-indicator")) {
     const indicator = document.createElement("div");
     indicator.className = "king-kong-indicator";
     indicator.style.cssText = `
-              position: absolute;
-              top: -2px;
-              left: -2px;
-              width: 4px;
-              height: 4px;
-              background: #ff6b6b;
-              border-radius: 50%;
-              z-index: 1000;
-              opacity: 0.7;
-          `;
-    indicator.title = "Filtered by King Kong";
+      position: absolute;
+      top: 0;
+      right: 0;
+      background: #e74c3c;
+      color: white;
+      padding: 2px 6px;
+      font-size: 10px;
+      border-radius: 0 0 0 4px;
+      z-index: 1000;
+      pointer-events: none;
+    `;
+    indicator.textContent = "🦍 FILTERED";
+
+    // Make the comment thread relatively positioned
     commentThread.style.position = "relative";
     commentThread.appendChild(indicator);
   }
 }
 
-// Show a comment (in case patterns change)
+// Show a comment
 function showComment(commentThread) {
-  if (
-    commentThread.style.display === "none" &&
-    commentThread.getAttribute("data-king-kong-filtered") === "true"
-  ) {
+  if (commentThread.getAttribute("data-king-kong-filtered") === "true") {
     commentThread.style.display = "";
     commentThread.removeAttribute("data-king-kong-filtered");
 
-    // Decrement count when showing a previously hidden comment
+    // Remove indicator
+    const indicator = commentThread.querySelector(".king-kong-indicator");
+    if (indicator) {
+      indicator.remove();
+    }
+
     if (filteredCommentsCount > 0) {
       filteredCommentsCount--;
     }
-
-    // Remove indicator
-    const indicator = commentThread.querySelector(".king-kong-indicator");
-    if (indicator) {
-      indicator.remove();
-    }
   }
 }
 
-// Update filtered comments count
-async function updateFilteredCount() {
+// Update all counts and notify popup
+async function updateCounts() {
   try {
     await chrome.storage.local.set({
-      filteredCommentsCount: filteredCommentsCount,
+      filteredCommentsCount,
+      highlightedCommentsCount,
+      totalCommentsCount,
     });
 
-    // Notify popup to update stats
-    chrome.runtime.sendMessage({ action: "updateStats" }).catch(() => {
-      // Popup might not be open, ignore error
-    });
+    // Notify popup to update stats display
+    chrome.runtime
+      .sendMessage({
+        action: "updateStats",
+      })
+      .catch(() => {
+        // Popup might not be open, ignore error
+      });
   } catch (error) {
-    console.error("Error updating filtered count:", error);
+    console.error("Error updating counts:", error);
   }
 }
 
-// Reset filtered count
-function resetFilteredCount() {
+// Reset all counts
+function resetCounts() {
   filteredCommentsCount = 0;
-  updateFilteredCount();
+  highlightedCommentsCount = 0;
+  totalCommentsCount = 0;
+  updateCounts();
 }
 
-// Show all hidden comments
+// Show all comments (remove all filters)
 function showAllComments() {
-  const hiddenComments = document.querySelectorAll(
-    'ytd-comment-thread-renderer[data-king-kong-filtered="true"]'
+  const filteredComments = document.querySelectorAll(
+    '[data-king-kong-filtered="true"]'
   );
+  let restoredCount = 0;
 
-  let countToSubtract = 0;
-  hiddenComments.forEach((commentThread) => {
-    commentThread.style.display = "";
-    commentThread.removeAttribute("data-king-kong-filtered");
-    countToSubtract++;
+  filteredComments.forEach((comment) => {
+    comment.style.display = "";
+    comment.removeAttribute("data-king-kong-filtered");
 
     // Remove indicator
-    const indicator = commentThread.querySelector(".king-kong-indicator");
+    const indicator = comment.querySelector(".king-kong-indicator");
     if (indicator) {
       indicator.remove();
     }
+
+    restoredCount++;
   });
 
-  // Subtract the actual number of comments we just showed
-  filteredCommentsCount = Math.max(0, filteredCommentsCount - countToSubtract);
-  updateFilteredCount();
+  filteredCommentsCount = Math.max(0, filteredCommentsCount - restoredCount);
+  updateCounts();
 
-  console.log(`🦍 King Kong: Showed ${countToSubtract} hidden comments`);
+  console.log(`🦍 King Kong: Restored ${restoredCount} comments`);
+}
+
+// Remove all highlights
+function removeAllHighlights() {
+  const highlightedComments = document.querySelectorAll(
+    '[data-king-kong-highlighted="true"]'
+  );
+
+  highlightedComments.forEach((commentElement) => {
+    // Restore original text content
+    const originalText =
+      commentElement.textContent || commentElement.innerText || "";
+    commentElement.innerHTML = originalText;
+    commentElement.removeAttribute("data-king-kong-highlighted");
+  });
+
+  // Remove background styling from comment threads
+  const highlightedThreads = document.querySelectorAll(
+    '[data-king-kong-thread-highlighted="true"]'
+  );
+
+  highlightedThreads.forEach((thread) => {
+    thread.style.backgroundColor = "";
+    thread.style.border = "";
+    thread.style.borderRadius = "";
+    thread.style.padding = "";
+    thread.style.margin = "";
+    thread.removeAttribute("data-king-kong-thread-highlighted");
+    thread.removeAttribute("data-highlight-color");
+  });
+
+  highlightedCommentsCount = 0;
+  updateCounts();
+
+  console.log("🦍 King Kong: Removed all highlights");
+}
+
+// Reprocess all comments (useful when patterns change)
+function reprocessAllComments() {
+  // Remove processing markers
+  const processedComments = document.querySelectorAll(
+    '[data-king-kong-processed="true"]'
+  );
+  processedComments.forEach((comment) => {
+    comment.removeAttribute("data-king-kong-processed");
+  });
+
+  // Reset counts
+  resetCounts();
+
+  // Remove existing highlights
+  removeAllHighlights();
+
+  // Reprocess
+  processExistingComments();
+
+  console.log("🦍 King Kong: Reprocessed all comments");
 }
 
 // Listen for messages from popup
@@ -290,78 +442,51 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   switch (request.action) {
     case "toggleFilter":
       isFilterEnabled = request.enabled;
-      console.log(
-        "🦍 King Kong: Filter",
-        isFilterEnabled ? "enabled" : "disabled"
-      );
-
-      if (isFilterEnabled) {
-        startObserving();
+      if (request.enabled) {
         processExistingComments();
       } else {
-        stopObserving();
         showAllComments();
       }
       break;
 
     case "updatePatterns":
-      regexPatterns = request.patterns;
-      console.log("🦍 King Kong: Updated patterns:", regexPatterns);
+      filterPatterns = request.patterns;
+      reprocessAllComments();
+      break;
 
-      if (isFilterEnabled) {
-        // Re-evaluate all comments with new patterns
-        showAllComments();
-        resetFilteredCount();
-        processExistingComments();
-      }
+    case "updateHighlightPatterns":
+      highlightPatterns = request.patterns;
+      reprocessAllComments();
+      break;
+
+    case "getStats":
+      sendResponse({
+        filtered: filteredCommentsCount,
+        highlighted: highlightedCommentsCount,
+        total: totalCommentsCount,
+      });
       break;
   }
-
-  sendResponse({ success: true });
 });
 
-// Handle page navigation (YouTube is a SPA)
+// Handle navigation in YouTube SPA
 let currentUrl = location.href;
-const urlObserver = new MutationObserver(() => {
+new MutationObserver(() => {
   if (location.href !== currentUrl) {
     currentUrl = location.href;
-    console.log("🦍 King Kong: Page changed, resetting");
+    console.log("🦍 King Kong: Page navigation detected, reinitializing...");
 
-    resetFilteredCount();
-
-    // Wait for new page content to load
+    // Reset observer and reinitialize
+    stopObserving();
     setTimeout(() => {
-      if (isFilterEnabled) {
-        processExistingComments();
-      }
-    }, 1000);
+      init();
+    }, 1000); // Small delay to let page load
   }
-});
+}).observe(document, { subtree: true, childList: true });
 
-urlObserver.observe(document.body, {
-  childList: true,
-  subtree: true,
-});
-
-// Add some CSS for better performance
-const style = document.createElement("style");
-style.textContent = `
-    ytd-comment-thread-renderer[data-king-kong-filtered="true"] {
-        display: none !important;
-    }
-    
-    .king-kong-indicator {
-        pointer-events: none;
-    }
-`;
-document.head.appendChild(style);
-
-// Initialize when DOM is ready
+// Initialize when page loads
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", init);
 } else {
   init();
 }
-
-// Handle case where script loads after page is already loaded
-setTimeout(init, 1000);

@@ -3,16 +3,33 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>King Kong - Comment Filter</title>
+    <title>King Kong - Comment Manager</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <div class="container">
       <header>
         <h1>🦍 King Kong</h1>
-        <p>YouTube Comment Filter</p>
+        <p>YouTube Comment Manager</p>
       </header>
 
+      <!-- Tab Navigation -->
+      <div class="tab-navigation">
+        <button class="tab-button active" data-tab="filter">
+          <span class="tab-icon">🚫</span>
+          Filter
+        </button>
+        <button class="tab-button" data-tab="highlight">
+          <span class="tab-icon">✨</span>
+          Highlight
+        </button>
+        <button class="tab-button" data-tab="stats">
+          <span class="tab-icon">📊</span>
+          Stats
+        </button>
+      </div>
+
+      <!-- Filter Status (only shown on filter tab) -->
       <div class="status">
         <label class="toggle">
           <input type="checkbox" id="enableFilter" />
@@ -21,62 +38,192 @@
         <span id="statusText">Filter Disabled</span>
       </div>
 
-      <div class="section">
-        <h3>Pattern Management</h3>
+      <!-- Filter Tab Content -->
+      <div id="filterTab" class="tab-content active">
+        <div class="section">
+          <h3>Filter Patterns</h3>
 
-        <!-- Add Pattern Button (shown by default) -->
-        <button id="showAddFormBtn" class="btn-primary">
-          <span class="btn-icon">➕</span>
-          Add Regex Pattern
-        </button>
+          <!-- Add Pattern Button -->
+          <button id="showFilterFormBtn" class="btn-primary">
+            <span class="btn-icon">➕</span>
+            Add Filter Pattern
+          </button>
 
-        <!-- Add Pattern Form (hidden by default) -->
-        <div id="addPatternForm" class="add-pattern-form hidden">
-          <div class="input-group">
-            <input
-              type="text"
-              id="patternTitle"
-              placeholder="Pattern title (e.g., 'Spam Comments')"
-            />
-          </div>
-          <div class="input-group">
-            <input
-              type="text"
-              id="regexInput"
-              placeholder="Enter regex pattern (e.g., spam|bot|fake)"
-            />
-            <button id="addPattern">Add</button>
-            <button id="cancelAdd" class="btn-cancel">Cancel</button>
-          </div>
-          <div class="help-text">
-            Examples: <code>spam|bot</code>, <code>\b(buy|sale)\b</code>,
-            <code>^.*promote.*$</code>
+          <!-- Add Pattern Form -->
+          <div id="addFilterForm" class="add-pattern-form hidden">
+            <div class="input-group">
+              <input
+                type="text"
+                id="filterPatternTitle"
+                placeholder="Pattern title (e.g., 'Spam Comments')"
+              />
+            </div>
+            <div class="input-group">
+              <input
+                type="text"
+                id="filterRegexInput"
+                placeholder="Enter regex pattern (e.g., spam|bot|fake)"
+              />
+              <button id="addFilterPattern">Add</button>
+              <button id="cancelFilterAdd" class="btn-cancel">Cancel</button>
+            </div>
+            <div class="help-text">
+              Examples: <code>spam|bot</code>, <code>\b(buy|sale)\b</code>,
+              <code>^.*promote.*$</code>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="section">
-        <h3>Active Patterns</h3>
-        <div id="patternsList" class="patterns-list">
-          <div class="empty-state">No patterns added yet</div>
+        <div class="section">
+          <h3>Active Filter Patterns</h3>
+          <div id="filterPatternsList" class="patterns-list">
+            <div class="empty-state">No filter patterns added yet</div>
+          </div>
         </div>
-      </div>
 
-      <div class="stats">
-        <div class="stat-item">
-          <span class="stat-label">Comments Filtered:</span>
-          <span id="filteredCount">0</span>
+        <div class="stats">
+          <div class="stat-item">
+            <span class="stat-label">Comments Filtered:</span>
+            <span id="filteredCount">0</span>
+          </div>
         </div>
+
+        <footer>
+          <button id="clearAllFilter" class="btn-secondary">Clear All</button>
+          <button id="loadDefaultsFilter" class="btn-secondary">
+            Load Defaults
+          </button>
+          <button id="exportFilter" class="btn-secondary">Export</button>
+          <button id="importFilter" class="btn-secondary">Import</button>
+        </footer>
       </div>
 
-      <footer>
-        <button id="clearAll" class="btn-secondary">Clear All</button>
-        <button id="loadDefaults" class="btn-secondary">Load Defaults</button>
-        <button id="exportPatterns" class="btn-secondary">Export</button>
-        <button id="importPatterns" class="btn-secondary">Import</button>
-      </footer>
+      <!-- Highlight Tab Content -->
+      <div id="highlightTab" class="tab-content">
+        <div class="section">
+          <h3>Highlight Patterns</h3>
+
+          <!-- Add Pattern Button -->
+          <button id="showHighlightFormBtn" class="btn-primary">
+            <span class="btn-icon">🎨</span>
+            Add Highlight Pattern
+          </button>
+
+          <!-- Add Pattern Form -->
+          <div id="addHighlightForm" class="add-pattern-form hidden">
+            <div class="input-group">
+              <input
+                type="text"
+                id="highlightPatternTitle"
+                placeholder="Pattern title (e.g., 'Important Keywords')"
+              />
+            </div>
+            <div class="input-group">
+              <input
+                type="color"
+                id="highlightColorInput"
+                value="#ff6b6b"
+                title="Choose highlight color"
+              />
+              <button
+                id="randomHighlightColor"
+                class="btn-icon-small"
+                title="Random Color"
+              >
+                🎲
+              </button>
+              <input
+                type="text"
+                id="highlightRegexInput"
+                placeholder="Enter regex pattern (e.g., thanks|helpful)"
+                style="flex: 1"
+              />
+            </div>
+            <div class="input-group">
+              <button id="addHighlightPattern">Add Pattern</button>
+              <button id="cancelHighlightAdd" class="btn-cancel">Cancel</button>
+            </div>
+            <div class="help-text">
+              Examples: <code>thanks|helpful</code>,
+              <code>\b(great|awesome)\b</code>,
+              <code>^.*question.*$</code>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <h3>Active Highlight Patterns</h3>
+          <div id="highlightPatternsList" class="patterns-list">
+            <div class="empty-state">No highlight patterns added yet</div>
+          </div>
+        </div>
+
+        <footer>
+          <button id="clearAllHighlight" class="btn-secondary">
+            Clear All
+          </button>
+          <button id="exportHighlight" class="btn-secondary">Export</button>
+          <button id="importHighlight" class="btn-secondary">Import</button>
+        </footer>
+      </div>
+
+      <!-- Stats Tab Content -->
+      <div id="statsTab" class="tab-content">
+        <div class="section">
+          <h3>Statistics Overview</h3>
+
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-value" id="filteredCount">0</div>
+              <div class="stat-label">Comments Filtered</div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-value" id="highlightedCount">0</div>
+              <div class="stat-label">Comments Highlighted</div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-value" id="totalCount">0</div>
+              <div class="stat-label">Total Comments</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <h3>Performance Metrics</h3>
+
+          <div class="metrics-list">
+            <div class="metric-item">
+              <span class="metric-label">Filter Rate:</span>
+              <span class="metric-value" id="filterRate">0%</span>
+            </div>
+
+            <div class="metric-item">
+              <span class="metric-label">Highlight Rate:</span>
+              <span class="metric-value" id="highlightRate">0%</span>
+            </div>
+
+            <div class="metric-item">
+              <span class="metric-label">Processing Efficiency:</span>
+              <span class="metric-value" id="efficiency">0%</span>
+            </div>
+          </div>
+        </div>
+
+        <footer>
+          <button id="resetStats" class="btn-secondary">Reset Stats</button>
+        </footer>
+      </div>
     </div>
 
+    <!-- Include all JavaScript modules -->
+    <script src="js/storage.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/tab-manager.js"></script>
+    <script src="js/filter-manager.js"></script>
+    <script src="js/highlight-manager.js"></script>
+    <script src="js/stats-manager.js"></script>
     <script src="popup.js"></script>
   </body>
 </html>
