@@ -79,6 +79,7 @@
 2. **Open Chrome Extensions page**
    - Navigate to `chrome://extensions/`
    - Or go to Chrome menu → More Tools → Extensions
+   - Or in any other Chromium browser, navigate to the extensions management page. extensions → manage extensions
 
 3. **Enable Developer Mode**
    - Toggle the "Developer mode" switch in the top right
