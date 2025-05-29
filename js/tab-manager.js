@@ -50,16 +50,26 @@ class TabManager {
 
   updateHeader(tabId) {
     const statusSection = document.querySelector(".status");
+    const searchStatusSection = document.querySelector(".search-status");
 
     switch (tabId) {
       case "filter":
         statusSection.style.display = "flex";
+        if (searchStatusSection) {
+          searchStatusSection.style.display = "flex";
+        }
         break;
       case "highlight":
         statusSection.style.display = "none";
+        if (searchStatusSection) {
+          searchStatusSection.style.display = "none";
+        }
         break;
       case "stats":
         statusSection.style.display = "none";
+        if (searchStatusSection) {
+          searchStatusSection.style.display = "none";
+        }
         break;
     }
   }

@@ -11,6 +11,7 @@ let totalCommentsCount = 0;
 let observer = null;
 let searchTerm = "";
 let searchInput = null;
+let isSearchBarEnabled = true; // Default to enabled
 
 // Initialize the extension
 async function init() {
@@ -20,8 +21,10 @@ async function init() {
 
   startObserving();
 
-  // Inject search functionality
-  injectSearchInput();
+  // Inject search functionality if enabled
+  if (isSearchBarEnabled) {
+    injectSearchInput();
+  }
 
   // Process existing comments
   processExistingComments();
@@ -32,15 +35,22 @@ async function init() {
     "filter patterns,",
     highlightPatterns.length,
     "highlight patterns, filter",
-    isFilterEnabled ? "enabled" : "disabled"
+    isFilterEnabled ? "enabled" : "disabled",
+    ", search bar",
+    isSearchBarEnabled ? "enabled" : "disabled"
   );
 }
 
 // Load settings from storage
 async function loadSettings() {
   try {
-    const result = await chrome.storage.sync.get(["filterEnabled"]);
+    const result = await chrome.storage.sync.get([
+      "filterEnabled",
+      "searchBarEnabled",
+    ]);
     isFilterEnabled = result.filterEnabled || false;
+    isSearchBarEnabled =
+      result.searchBarEnabled !== undefined ? result.searchBarEnabled : true; // Default to enabled
   } catch (error) {
     console.error("Error loading settings:", error);
   }
@@ -119,8 +129,10 @@ function startObserving() {
     });
 
     if (hasNewCommentsHeader) {
-      // Inject search input when comments header appears
-      setTimeout(injectSearchInput, 100);
+      // Inject search input when comments header appears, but only if enabled
+      if (isSearchBarEnabled) {
+        setTimeout(injectSearchInput, 100);
+      }
     }
 
     if (hasNewComments) {
@@ -299,6 +311,11 @@ function hexToRgba(hex, alpha = 1) {
 
 // Inject search input into YouTube comments header
 function injectSearchInput() {
+  // Don't inject if search bar is disabled
+  if (!isSearchBarEnabled) {
+    return;
+  }
+
   // Check if search input already exists
   if (searchInput && document.contains(searchInput)) {
     return;
@@ -321,7 +338,7 @@ function injectSearchInput() {
   const searchContainer = document.createElement("div");
   searchContainer.id = "king-kong-search-container";
   searchContainer.style.cssText = `
-    display: flex;
+    display: ${isSearchBarEnabled ? "flex" : "none"};
     align-items: center;
     gap: 0;
     margin-left: 24px;
@@ -757,6 +774,41 @@ function reprocessAllComments() {
   console.log("🦍 King Kong: Reprocessed all comments");
 }
 
+// Show search bar
+function showSearchBar() {
+  // Always inject fresh search input since it might have been removed
+  if (!searchInput || !document.contains(searchInput)) {
+    injectSearchInput();
+  } else {
+    const searchContainer = document.getElementById(
+      "king-kong-search-container"
+    );
+    if (searchContainer) {
+      searchContainer.style.display = "flex";
+    }
+  }
+  console.log("🦍 King Kong: Search bar shown");
+}
+
+// Hide search bar
+function hideSearchBar() {
+  const searchContainer = document.getElementById("king-kong-search-container");
+  if (searchContainer) {
+    // Remove the container completely instead of just hiding it
+    searchContainer.remove();
+  }
+
+  // Clear search when hiding
+  if (searchInput) {
+    searchInput.value = "";
+    searchTerm = "";
+    applySearchFilter("");
+    searchInput = null; // Reset the reference
+  }
+
+  console.log("🦍 King Kong: Search bar removed");
+}
+
 // Listen for messages from popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   switch (request.action) {
@@ -766,6 +818,15 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         processExistingComments();
       } else {
         showAllComments();
+      }
+      break;
+
+    case "toggleSearchBar":
+      isSearchBarEnabled = request.enabled;
+      if (request.enabled) {
+        showSearchBar();
+      } else {
+        hideSearchBar();
       }
       break;
 

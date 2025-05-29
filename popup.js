@@ -4,6 +4,7 @@
 let tabManager;
 let filterManager;
 let highlightManager;
+let searchManager;
 let statsManager;
 
 // Initialize popup
@@ -13,6 +14,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     tabManager = new TabManager();
     filterManager = new FilterManager();
     highlightManager = new HighlightManager();
+    searchManager = new SearchManager();
     statsManager = new StatsManager();
 
     console.log("🦍 King Kong popup initialized successfully");

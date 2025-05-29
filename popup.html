@@ -38,6 +38,24 @@
         <span id="statusText">Filter Disabled</span>
       </div>
 
+      <!-- Search Bar Status (only shown on filter tab) -->
+      <div class="status search-status">
+        <label class="toggle">
+          <input type="checkbox" id="enableSearchBar" />
+          <span class="slider"></span>
+        </label>
+        <span id="searchStatusText">Search Bar Disabled</span>
+        <div class="tooltip" id="searchTooltip">
+          <span class="tooltip-icon"></span>
+          <div class="tooltip-content">
+            <strong>Search Feature:</strong><br />
+            • Only searches through already loaded comments<br />
+            • YouTube loads comments as you scroll<br />
+            • For best results, scroll down first to load more comments
+          </div>
+        </div>
+      </div>
+
       <!-- Filter Tab Content -->
       <div id="filterTab" class="tab-content active">
         <div class="section">
@@ -223,6 +241,7 @@
     <script src="js/tab-manager.js"></script>
     <script src="js/filter-manager.js"></script>
     <script src="js/highlight-manager.js"></script>
+    <script src="js/search-manager.js"></script>
     <script src="js/stats-manager.js"></script>
     <script src="popup.js"></script>
   </body>
