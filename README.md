@@ -19,6 +19,9 @@
 - [🚀 Quick Start](#-quick-start)
 - [📥 Installation](#-installation)
 - [🎯 Usage](#-usage)
+  - [Basic Usage](#basic-usage)
+  - [Search Functionality](#search-functionality)
+  - [Managing Patterns](#managing-patterns)
 - [🛠️ Default Patterns](#️-default-patterns)
 - [📊 Examples](#-examples)
 - [🔧 Technical Details](#-technical-details)
@@ -34,6 +37,12 @@
 - **Real-time detection** - Automatically filters new comments as they load
 - **Case-insensitive matching** - Catches variations in capitalization
 - **YouTube SPA support** - Works seamlessly across YouTube's single-page application
+
+### 🔍 **Advanced Search**
+- **Comment search functionality** - Search through loaded YouTube comments with custom patterns
+- **Real-time search** - Instantly highlight matching comments as you type
+- **Pattern-based search** - Use the same regex patterns for searching and filtering
+- **Scroll-aware searching** - Works with comments that are already loaded on the page
 
 ### 🏷️ **Pattern Management**
 - **Titled patterns** - Give descriptive names to your regex patterns for easy management
@@ -63,6 +72,7 @@
 4. **Enable the filter** using the toggle switch
 5. **Default patterns are automatically loaded** - start filtering immediately!
 6. **Add custom patterns** for your specific needs
+7. **Optional: Enable search bar** to search through loaded comments
 
 ---
 
@@ -102,6 +112,24 @@
 2. **Open King Kong** - Click the extension icon in your toolbar
 3. **Enable filtering** - Toggle the switch to start filtering
 4. **View statistics** - See how many comments have been filtered
+
+### Search Functionality
+
+#### Enabling Search
+1. **Open King Kong** - Click the extension icon in your toolbar
+2. **Enable Search Bar** - Toggle the "Search Bar" switch
+3. **Search becomes active** - A search bar will appear on YouTube comment sections
+
+#### Using Search
+1. **Scroll down first** - Load more comments by scrolling down the YouTube page
+2. **Use the search bar** - Type your search terms or regex patterns
+3. **View results** - Matching comments will be highlighted in real-time
+4. **Clear search** - Empty the search bar to show all comments again
+
+#### Search Limitations
+- **Only searches loaded comments** - YouTube loads comments progressively as you scroll
+- **Best practice** - Scroll down to load more comments before searching
+- **Real-time only** - Searches through comments currently visible in the DOM
 
 ### Managing Patterns
 
