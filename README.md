@@ -72,7 +72,7 @@
 
 1. **Download or clone** this repository
    ```bash
-   git clone https://github.com/yourusername/king-kong-extension.git
+   git clone https://github.com/Mithun-750/king-kong.git
    cd king-kong-extension
    ```
 
@@ -253,6 +253,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
   
   **Made with ❤️ for a cleaner YouTube experience**
   
-  [Report Bug](https://github.com/yourusername/king-kong-extension/issues) · [Request Feature](https://github.com/yourusername/king-kong-extension/issues) · [Documentation](https://github.com/yourusername/king-kong-extension/wiki)
+  [Report Bug](https://github.com/Mithun-750/king-kong/issues) · [Request Feature](https://github.com/Mithun-750/king-kong/issues)
   
 </div> 
