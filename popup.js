@@ -5,7 +5,6 @@ let tabManager;
 let filterManager;
 let highlightManager;
 let searchManager;
-let statsManager;
 
 // Initialize popup
 document.addEventListener("DOMContentLoaded", async () => {
@@ -15,7 +14,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     filterManager = new FilterManager();
     highlightManager = new HighlightManager();
     searchManager = new SearchManager();
-    statsManager = new StatsManager();
 
     console.log("🦍 King Kong popup initialized successfully");
   } catch (error) {
@@ -26,7 +24,5 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 // Listen for messages from content script
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (statsManager) {
-    statsManager.handleMessage(request);
-  }
+  // Message handling for remaining managers can be added here if needed
 });

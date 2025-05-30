@@ -23,10 +23,6 @@
           <span class="tab-icon">✨</span>
           Highlight
         </button>
-        <button class="tab-button" data-tab="stats">
-          <span class="tab-icon">📊</span>
-          Stats
-        </button>
       </div>
 
       <!-- Filter Status (only shown on filter tab) -->
@@ -184,55 +180,6 @@
           <button id="importHighlight" class="btn-secondary">Import</button>
         </footer>
       </div>
-
-      <!-- Stats Tab Content -->
-      <div id="statsTab" class="tab-content">
-        <div class="section">
-          <h3>Statistics Overview</h3>
-
-          <div class="stats-grid">
-            <div class="stat-card">
-              <div class="stat-value" id="filteredCount">0</div>
-              <div class="stat-label">Comments Filtered</div>
-            </div>
-
-            <div class="stat-card">
-              <div class="stat-value" id="highlightedCount">0</div>
-              <div class="stat-label">Comments Highlighted</div>
-            </div>
-
-            <div class="stat-card">
-              <div class="stat-value" id="totalCount">0</div>
-              <div class="stat-label">Total Comments</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="section">
-          <h3>Performance Metrics</h3>
-
-          <div class="metrics-list">
-            <div class="metric-item">
-              <span class="metric-label">Filter Rate:</span>
-              <span class="metric-value" id="filterRate">0%</span>
-            </div>
-
-            <div class="metric-item">
-              <span class="metric-label">Highlight Rate:</span>
-              <span class="metric-value" id="highlightRate">0%</span>
-            </div>
-
-            <div class="metric-item">
-              <span class="metric-label">Processing Efficiency:</span>
-              <span class="metric-value" id="efficiency">0%</span>
-            </div>
-          </div>
-        </div>
-
-        <footer>
-          <button id="resetStats" class="btn-secondary">Reset Stats</button>
-        </footer>
-      </div>
     </div>
 
     <!-- Include all JavaScript modules -->
@@ -242,7 +189,6 @@
     <script src="js/filter-manager.js"></script>
     <script src="js/highlight-manager.js"></script>
     <script src="js/search-manager.js"></script>
-    <script src="js/stats-manager.js"></script>
     <script src="popup.js"></script>
   </body>
 </html>

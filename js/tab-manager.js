@@ -65,12 +65,6 @@ class TabManager {
           searchStatusSection.style.display = "none";
         }
         break;
-      case "stats":
-        statusSection.style.display = "none";
-        if (searchStatusSection) {
-          searchStatusSection.style.display = "none";
-        }
-        break;
     }
   }
 

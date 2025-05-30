@@ -669,15 +669,6 @@ async function updateCounts() {
       highlightedCommentsCount,
       totalCommentsCount,
     });
-
-    // Notify popup to update stats display
-    chrome.runtime
-      .sendMessage({
-        action: "updateStats",
-      })
-      .catch(() => {
-        // Popup might not be open, ignore error
-      });
   } catch (error) {
     console.error("Error updating counts:", error);
   }
@@ -838,14 +829,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     case "updateHighlightPatterns":
       highlightPatterns = request.patterns;
       reprocessAllComments();
-      break;
-
-    case "getStats":
-      sendResponse({
-        filtered: filteredCommentsCount,
-        highlighted: highlightedCommentsCount,
-        total: totalCommentsCount,
-      });
       break;
   }
 });
