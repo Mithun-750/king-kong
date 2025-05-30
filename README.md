@@ -244,7 +244,7 @@ These patterns are designed to be:
 We welcome contributions! Here's how you can help:
 
 ### Reporting Issues
-- Use the [Issues](https://github.com/yourusername/king-kong-extension/issues) tab
+- Use the [Issues](https://github.com/Mithun-750/king-kong/issues) tab
 - Provide detailed bug reports with steps to reproduce
 - Include browser version and extension version
 
@@ -263,7 +263,7 @@ We welcome contributions! Here's how you can help:
 ### Development Setup
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/king-kong-extension.git
+git clone https://github.com/Mithun-750/king-kong.git
 cd king-kong-extension
 
 # Load the extension in Chrome for testing
